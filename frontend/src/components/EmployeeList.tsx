@@ -3,36 +3,36 @@ import { EmployeeCard } from "./EmployeeCard";
 
 export function EmployeeList({ employees }: { employees: Employee[] }) {
   return (
-    <div className="employee-list">
-      <div className="list-head" aria-hidden="true">
-        <span>EMPLOYEE</span>
-        <span>ROLE / EMPLOYEE ID</span>
-        <span>DEPARTMENT</span>
-        <span>DATE JOINED</span>
-        <span />
-      </div>
-      {employees.map((employee) => (
-        <EmployeeCard key={employee.id} employee={employee} />
-      ))}
-    </div>
+    <table className="employee-table">
+      <caption className="sr-only">Employee search results</caption>
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">Email</th>
+          <th scope="col">Designation</th>
+          <th scope="col">Department</th>
+          <th scope="col">Joining date</th>
+          <th scope="col">Contact</th>
+        </tr>
+      </thead>
+      <tbody>
+        {employees.map((employee) => (
+          <EmployeeCard key={employee.id} employee={employee} />
+        ))}
+      </tbody>
+    </table>
   );
 }
 
 export function EmployeeSkeletons() {
   return (
-    <div className="employee-list skeleton-list" aria-hidden="true">
-      {Array.from({ length: 6 }, (_, index) => (
+    <div className="skeleton-list" aria-hidden="true">
+      {Array.from({ length: 4 }, (_, index) => (
         <div className="skeleton-row" key={index}>
-          <div className="skeleton-person">
-            <div className="skeleton skeleton-avatar" />
-            <div>
-              <div className="skeleton skeleton-name" />
-              <div className="skeleton skeleton-email" />
-            </div>
-          </div>
-          <div className="skeleton skeleton-role" />
-          <div className="skeleton skeleton-team" />
-          <div className="skeleton skeleton-date" />
+          <span className="skeleton skeleton-avatar" />
+          <span className="skeleton" />
+          <span className="skeleton" />
+          <span className="skeleton" />
         </div>
       ))}
     </div>
