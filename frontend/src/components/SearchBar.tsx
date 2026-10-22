@@ -30,7 +30,7 @@ export function SearchBar({ value, onChange }: Props) {
     <div className="search-box">
       <Search size={23} aria-hidden="true" />
       <label className="sr-only" htmlFor="employee-search">
-        Search employees by name or department
+        Search employees by name, email or department
       </label>
       <input
         type="text"

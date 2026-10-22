@@ -1,36 +1,87 @@
-# People — Employee Directory
+# Employee Directory Search
 
-An employee directory built with React, Vite, TypeScript, FastAPI, and MySQL 8.4. Search by name or department, browse employee details, and load another page without losing your current results.
+A small internal tool for finding employees and viewing their details. It addresses a common need within a company: finding a colleague by name or department without manually going through the full employee list.
 
-## Run locally
+Users can enter a name or department and see matching employee cards. The application also supports email search and a separate team filter. For example, searching for `Rahul` and selecting Engineering shows matching employees from that department while keeping the search text in place.
 
-Prerequisites: Python 3.12+, Node.js 22.12+ (Node 24 also works), and Docker Desktop with Compose. Start Docker Desktop before running the database command.
+## What the application does
 
-### 1. Configure and start MySQL
+- Searches employees by the beginning of their name, email, or department.
+- Filters results by a selected department without replacing the typed search.
+- Shows each employee's ID, name, email, department, designation, and joining date.
+- Displays loading, empty-result, and error states, with a retry option when a request fails.
+- Loads results in pages instead of fetching the entire directory.
 
-Open a terminal in the extracted `employee-directory` folder:
+The frontend provides the search interface, the FastAPI backend validates requests and retrieves matching records, and MySQL stores the employee data. The included sample records are fictional and can be used to run the project locally.
+
+## Stack
+
+- Frontend: React, Vite, TypeScript, and CSS
+- Backend: Python and FastAPI
+- Database: MySQL 8.4
+- Database access: SQLAlchemy with PyMySQL
+- Migrations: Alembic
+- Tests: Vitest, React Testing Library, and pytest
+
+Docker Compose runs the MySQL server locally. The frontend and backend run separately on the host machine. Docker is optional if MySQL is already installed.
+
+## Running the project
+
+### Prerequisites
+
+- Python 3.12 or newer
+- Node.js 22.12 or newer and npm
+- Docker Desktop with Docker Compose, if using the included database setup
+- A recent browser that supports `AbortSignal.any()` and `AbortSignal.timeout()`
+
+### 1. Get the source
+
+```sh
+git clone https://github.com/ShoebAntule/employee-directory-search.git
+cd employee-directory-search
+```
+
+If using a downloaded ZIP, extract it and open the folder containing `frontend/`, `backend/`, and `compose.yaml`.
+
+### 2. Configure the environment and start MySQL
+
+Start Docker Desktop, then run these commands from the project root:
 
 ```sh
 python configure.py
 docker compose up -d --wait
 ```
 
-The configuration script creates root, backend, and frontend `.env` files with unique local database passwords. It refuses to overwrite existing environment files. The root file configures Docker; the backend file has matching application credentials; the frontend file sets the API base URL. No real credentials are included in this repository.
+On macOS or Linux, use `python3 configure.py` if `python` is unavailable.
 
-### 2. Start the backend
+The configuration script creates three files:
 
-Windows PowerShell:
+| File | Purpose |
+| --- | --- |
+| `.env` | Database name, user, passwords, and exposed port for Docker Compose |
+| `backend/.env` | Database connection, connection pool settings, and allowed frontend origins |
+| `frontend/.env` | Backend API base URL |
+
+It generates matching application passwords for Docker and the backend, plus a separate root password. Existing `.env` files are never overwritten. For an existing setup, edit those files directly instead of rerunning the script.
+
+Only `.env.example` templates belong in Git. Actual `.env` files are ignored.
+
+### 3. Start the backend
+
+From the project root, open a terminal and use the commands for your operating system.
+
+**Windows PowerShell**
 
 ```powershell
 cd backend
 python -m venv .venv
-.venv\Scripts\python -m pip install -r requirements-dev.txt
-.venv\Scripts\python -m alembic upgrade head
-.venv\Scripts\python -m scripts.seed
-.venv\Scripts\python -m uvicorn app.main:create_app --factory --reload --host 127.0.0.1 --port 8000
+.\.venv\Scripts\python -m pip install -r requirements-dev.txt
+.\.venv\Scripts\python -m alembic upgrade head
+.\.venv\Scripts\python -m scripts.seed
+.\.venv\Scripts\python -m uvicorn app.main:create_app --factory --reload --host 127.0.0.1 --port 8000
 ```
 
-macOS / Linux:
+**macOS / Linux**
 
 ```sh
 cd backend
@@ -41,11 +92,11 @@ python3 -m venv .venv
 .venv/bin/python -m uvicorn app.main:create_app --factory --reload --host 127.0.0.1 --port 8000
 ```
 
-Keep this terminal running. The migration creates the table and indexes. Seeding creates 36 fictional employees with reserved example email addresses; rerunning it preserves existing employees with the same email.
+Alembic creates the employee table and indexes. The seed command adds 36 fictional employees. It can be rerun without duplicating existing email addresses.
 
-Interactive API documentation: <http://localhost:8000/docs>.
+Keep the terminal running. API documentation is available at [http://localhost:8000/docs](http://localhost:8000/docs).
 
-### 3. Start the frontend
+### 4. Start the frontend
 
 Open another terminal in the project root:
 
@@ -55,134 +106,118 @@ npm ci
 npm run dev
 ```
 
-Open <http://localhost:5173>. Click **Engineering** or search for **Rahul**. Try **Design**, **rah**, and an unmatched name. Clearing the input returns to the start state without requesting the API.
+Open [http://localhost:5173](http://localhost:5173).
 
-The development server uses a fixed port so the configured CORS origin stays accurate. If you change the port or use `127.0.0.1` in the browser, update `CORS_ORIGINS` in `backend/.env`. Restart the frontend after changing `VITE_API_BASE_URL`.
+The API address comes from `VITE_API_BASE_URL` in `frontend/.env`. Restart Vite after changing it. The backend allows the origins listed in `CORS_ORIGINS`; the default is `http://localhost:5173`. If using a different hostname or port in the browser, update that setting and restart the backend.
 
-### Existing MySQL installation
+### Using an existing MySQL server
 
-Docker is optional if you already have MySQL 8.0+ running. Copy `backend/.env.example` and `frontend/.env.example` to `.env` in their respective folders. Create the database and an application user with access to that database, then fill in the backend connection fields. Use your own passwords. Run the same migration, seed, and application commands above. MySQL's `utf8mb4_0900_ai_ci` collation is required by this schema; MariaDB is not a drop-in replacement.
+Use MySQL 8.0 or newer. Create the `employee_directory` database and an application user with access to it. Copy `backend/.env.example` to `backend/.env` and `frontend/.env.example` to `frontend/.env`, then fill in the connection settings. Skip Docker and run the same backend migration, seed, and startup commands above.
 
-The local application user needs schema privileges for Alembic and write privileges for sample-data seeding. A deployed read-only directory can use a separate runtime account granted `SELECT`, with migrations and seeding performed by a separate administrative account.
+The schema uses MySQL's `utf8mb4_0900_ai_ci` collation, so these instructions do not apply unchanged to MariaDB. Migrations need schema permissions, and seeding needs write permissions. The application does not need to connect as root.
 
-## Search behavior and API
+## Search behavior
+
+- Search matches the beginning of a name, email, or department.
+- MySQL matching is case-insensitive and accent-insensitive under the configured collation.
+- `rah` can match `Rahul Sharma`, and `eng` can match `Engineering`.
+- Selecting a team keeps the typed search text and restricts matches to that department.
+- Clicking the selected team again removes the department filter.
+- Selecting a team with an empty input shows that team's employees. The hook sends the team name as the search term along with the department filter.
+- Clearing the input keeps a selected team active. Clearing the text and deselecting the team returns to the initial state without a request.
+- Results load 12 employees at a time. The load-more button retrieves the next page.
+
+This is prefix search, not a search for text anywhere in a field. `Sharma` alone does not match `Rahul Sharma`, and `example.test` alone does not match `rahul.sharma@example.test`. The team shortcuts are defined in the frontend; they are not loaded from a departments API.
+
+## API
 
 ```http
 GET /employees?search=rahul
-GET /employees?search=eng&limit=12
-GET /employees?search=eng&limit=12&cursor=<next_cursor>
+GET /employees?search=rahul.sharma
+GET /employees?search=rahul&department=Engineering&limit=12
+GET /employees?search=Engineering&department=Engineering&limit=12
+GET /employees?search=rahul&department=Engineering&limit=12&cursor=<next_cursor>
 ```
 
-`search` is required. Leading and trailing spaces are trimmed; an empty value is rejected. Searches match the **beginning of the full name or department**, case-insensitively. For example, `rah` matches `Rahul Sharma`; `eng` matches `Engineering`. `Sharma` does not match `Rahul Sharma`. This deliberate prefix rule is shown in the UI; substring and surname-token search are outside this implementation. The MySQL collation also makes matching accent-insensitive.
+| Parameter | Rules |
+| --- | --- |
+| `search` | Required; trimmed, non-empty, maximum 150 characters |
+| `department` | Optional; trimmed, non-empty when supplied, maximum 100 characters; equality filter under the database collation |
+| `limit` | Defaults to 20; allowed range is 1 to 50 |
+| `cursor` | Optional continuation token from the previous response |
 
-`%`, `_`, and the escape character `!` are treated literally. The maximum search length is 150 characters. `limit` defaults to 20 and must be between 1 and 50. The frontend requests 12 employees per page. Unknown query parameters are rejected.
+The API still requires `search` when a department is supplied. The frontend handles department-only browsing using the fallback described above. Unknown parameters and control characters in search/filter values are rejected. The characters `%`, `_`, and `!` are treated literally rather than as user-supplied SQL wildcards.
 
-Example response shape:
-
-```json
-{
-  "items": [
-    {
-      "id": 1,
-      "name": "Rahul Sharma",
-      "email": "rahul.sharma@example.test",
-      "department": "Engineering",
-      "designation": "Senior Software Engineer",
-      "date_of_joining": "2021-01-01"
-    }
-  ],
-  "next_cursor": null,
-  "has_more": false
-}
-```
-
-The example illustrates the shape, not the complete seeded result set. Results have deterministic ascending employee-ID ordering. Treat `next_cursor` as opaque and pass it back with the same trimmed search. A cursor is an encoded position, not an authentication token or secret. Changing the search resets pagination.
+A successful response contains `items`, `has_more`, and `next_cursor`. Each item includes the six employee fields. Results are ordered by ascending employee ID. Use the returned cursor with the same search and department; changing either starts a new search. The cursor contains a position and a fingerprint of the search/filter values. It is not an authentication token or a signed value.
 
 | Status | Meaning |
 | --- | --- |
-| `200` | Results, including an empty list when nothing matches |
-| `422` | Missing/blank/oversized search, invalid limit/cursor, or unknown parameter |
-| `503` | Database unavailable or pool capacity exceeded; `Retry-After: 5` |
-| `500` | Unexpected database error; internal details are not returned |
+| `200` | Search completed; no matches returns an empty `items` list |
+| `422` | Invalid or missing search parameters, or an invalid cursor |
+| `503` | Database unavailable or connection pool timeout; includes `Retry-After: 5` |
+| `500` | Unexpected database error |
 
-Errors have a consistent shape:
+Handled errors return a `message` and a `details` list. Database credentials and SQL errors are not returned to the frontend.
 
-```json
-{
-  "message": "Check your search parameters.",
-  "details": [{ "field": "query.search", "message": "Enter an employee name or department." }]
-}
+## Database choice and connection handling
+
+I chose MySQL because employee records have a fixed structure and benefit from database constraints and indexes. The table uses InnoDB, an auto-increment primary key, a unique email address, and a native date column for the joining date.
+
+| Column | Type | Constraint |
+| --- | --- | --- |
+| `id` | BIGINT | Primary key, auto-increment |
+| `name` | VARCHAR(150) | Required |
+| `email` | VARCHAR(254) | Required, unique |
+| `department` | VARCHAR(100) | Required |
+| `designation` | VARCHAR(150) | Required |
+| `date_of_joining` | DATE | Required |
+
+Indexes on `(name, id)` and `(department, id)` support the corresponding search branches. The unique email constraint also creates an index for email lookups. Departments remain a text field because this application does not manage separate department records.
+
+SQLAlchemy keeps a connection pool instead of opening a new database connection for every request. Each request gets its own session, which is closed afterward. The default pool has five connections and allows five additional connections during a burst. These limits, the pool timeout, and connection recycling are configurable in `backend/.env`.
+
+Connections are checked before reuse. Connection establishment and database reads/writes have timeouts. Credentials come from environment settings, and SQLAlchemy builds the connection URL without manually concatenating the password. User input is passed as query parameters. The synchronous PyMySQL driver is used with synchronous FastAPI route handlers.
+
+## Search performance
+
+The frontend waits 350 ms after typing before sending a request. New searches cancel the previous request, and sequence checks prevent an older response from replacing newer results. A client timeout reports an error if a request takes too long. Aborting a browser request does not necessarily stop a database query already running.
+
+The backend uses prefix matching rather than a leading-wildcard query. It searches name, department, and email in three branches. Each branch selects at most `limit + 1` candidate IDs, with the selected department applied before pagination. A distinct union removes duplicates, and the final query fetches the six required fields for the bounded result set in one SQL statement.
+
+Pagination uses `id > last_id` instead of an increasingly large offset. One extra result determines whether another page exists, so there is no full count query for each search. Repeated load-more clicks are guarded, and a failed page request preserves the employees already displayed.
+
+Indexes make range scans possible, but broad prefixes can still scan or sort many matching entries. The candidate limits do not cap every internal database operation. Performance at a larger employee count should be checked with realistic data and a query plan.
+
+From `backend/`, inspect the unfiltered search plan with:
+
+```powershell
+.\.venv\Scripts\python -m scripts.explain_search rah
 ```
 
-Validation detail wording may also include Pydantic's `Value error` prefix. SQL statements, connection passwords, and stack traces are not sent to the browser.
+On macOS/Linux, use `.venv/bin/python` instead. This command runs `EXPLAIN FORMAT=JSON`; it is not a load test and does not currently accept a department-filter argument. Cursor pagination does not provide a snapshot if employee records change between requests.
 
-## Structure and responsibilities
+## Code organization
 
-| Location | Responsibility |
+| Folder | Responsibility |
 | --- | --- |
-| `frontend/src/api/` | Fetch client, API URL configuration, employee requests |
-| `frontend/src/hooks/` | Debouncing, cancellation, stale-response protection, pagination state |
-| `frontend/src/components/` | SearchBar, EmployeeCard, EmployeeList, skeletons, empty state |
-| `frontend/src/types/` | Shared frontend response contracts |
-| `backend/app/api/routes/` | Validated HTTP contract and service delegation |
-| `backend/app/api/dependencies.py` | Compose services and repositories per request |
-| `backend/app/api/exception_handlers.py` | Central HTTP error mapping |
+| `frontend/src/components/` | Search input, employee cards, lists, and display states |
+| `frontend/src/hooks/` | Debounce, cancellation, search state, and pagination |
+| `frontend/src/api/` | HTTP requests and API configuration |
+| `frontend/src/types/` | Frontend response types |
+| `backend/app/api/` | Routes, dependencies, and HTTP error handlers |
 | `backend/app/services/` | Search orchestration and cursor rules |
-| `backend/app/repositories/` | Parameterized employee queries |
-| `backend/app/db/` | Engine, pooled connections, session lifecycle, ORM base |
-| `backend/app/models/` | Persistent employee model |
+| `backend/app/repositories/` | Employee database queries |
+| `backend/app/db/` | Engine, connection pool, and session lifecycle |
+| `backend/app/models/` | Database model |
 | `backend/app/schemas/` | Request validation and response schemas |
-| `backend/migrations/` | Versioned database schema |
-| `backend/scripts/` | Idempotent sample-data seeding and query-plan inspection |
+| `backend/migrations/` | Versioned schema changes |
+| `backend/scripts/` | Sample data and query-plan inspection |
 
-Route handlers contain no database queries or business rules. Adding employee creation would introduce a creation schema, service method, repository write method, and route while reusing the existing database session dependency.
+Routes validate requests and delegate to the service. Database queries stay in the repository. Adding employee creation later would involve a request schema, service and repository methods, and a route using the existing session dependency.
 
-## Database design and connection approach
+## Checks
 
-One `employees` table stores the six required fields. It uses an auto-increment `BIGINT` primary key, required bounded strings, a unique email constraint, and a native `DATE` for joining date. Name and department are not unique: different employees can share either. Departments remain a bounded text field because this assignment has no separate department-management workflow; a department table and foreign key would be a natural extension if department records acquire their own metadata.
-
-The schema uses InnoDB and UTF-8 (`utf8mb4`). Two secondary indexes, `(name, id)` and `(department, id)`, support prefix filtering. Email uniqueness is enforced by the database. Alembic migrations create the schema explicitly; starting the web server never silently creates or changes tables.
-
-SQLAlchemy manages one engine per application process and a fresh session per request. Sessions close and return connections to the pool even on errors. The default pool holds five connections and allows five temporary overflow connections; tune this against the database's capacity and multiply by worker count when budgeting total connections. `pool_pre_ping` checks connections before reuse, and recycling retires older connections on checkout. Pool acquisition, connection establishment, and database reads/writes have finite timeouts. Passwords use secret settings and a structured connection URL so special characters are not manually concatenated into a DSN. Parameterized SQL keeps user input separate from query syntax.
-
-The synchronous PyMySQL driver is paired with synchronous FastAPI routes; FastAPI runs these handlers in its thread pool. An async database stack would be another valid choice, but is unnecessary for this assignment's scope.
-
-## Performance decisions and limits
-
-- **350 ms debounce:** typing `Rah` quickly sends one request after the pause. Pauses longer than 350 ms can legitimately produce additional searches.
-- **Cancellation and sequence checks:** a new search aborts previous requests; late responses cannot overwrite newer results. Aborting the browser request does not guarantee cancellation of a MySQL query already executing.
-- **No blank searches:** the initial/cleared state does not fetch the full directory.
-- **No UI-level fetching:** presentational components receive data and callbacks.
-- **Prefix filters:** use `LIKE 'rah%'` with escaped literal input and case-insensitive collation, without wrapping indexed columns in `LOWER()`.
-- **Two bounded candidate branches:** search name and department separately. Each branch selects at most `limit + 1` employee IDs; a distinct union deduplicates employees matching both. The final query joins back only the selected candidates and returns the six required fields, capped at `limit + 1`. This is one SQL statement and one database round trip.
-- **Cursor pagination:** `id > last_id` avoids increasingly deep offsets. One extra result establishes `has_more`; there is no full `COUNT(*)` query per search.
-- **Bounded client requests:** a 12-second timeout presents a retryable error if the server stops responding.
-- **Controlled pagination:** repeated load-more clicks cannot create duplicate in-flight requests. Pagination errors preserve existing cards and allow retry.
-- **Local fonts:** fonts are bundled with the app, with system fallbacks; no runtime font-service requests are needed.
-
-Indexes make prefix range scans possible; they do **not** guarantee constant-time search. The database optimizer chooses the plan. Broad prefixes or many matching employees may still require scanning/sorting many index entries to obtain the next IDs. Branch limits bound intermediate returned candidate sets, not the number of index entries examined. Validate with realistic data and `EXPLAIN`; do not interpret the small sample dataset as a production benchmark. A larger deployment may need a dedicated search index, a revised sort/index strategy, or token search depending on the measured workload.
-
-To inspect the actual MySQL plan, from `backend/` with its virtual environment:
-
-```sh
-python -m scripts.explain_search rah
-```
-
-Use the virtual environment's Python explicitly if you have not activated it. The inspection script prints `EXPLAIN FORMAT=JSON`; it does not execute a load test. Cursor pages are not a snapshot: concurrent inserts, deletions, or changes to employee search fields may affect later pages.
-
-## Verification
-
-Backend, from `backend/` with the virtual environment active:
-
-```sh
-python -m pytest -q
-python -m ruff check .
-python -m ruff format --check .
-```
-
-Windows users can replace `python` with `.venv\Scripts\python`; macOS/Linux users can use `.venv/bin/python` without activating anything.
-
-Frontend, from `frontend/`:
+From `frontend/`:
 
 ```sh
 npm test
@@ -190,25 +225,26 @@ npm run lint
 npm run build
 ```
 
-Backend unit/API tests use isolated in-memory SQLite databases for fast feedback. They are not a substitute for MySQL collation or query-plan verification. `tests/test_mysql.py` verifies the migrated indexes, actual MySQL prefix matching, duplicate elimination, and cursor pagination. Set `TEST_DATABASE_URL` to a **dedicated migrated MySQL test database** and rerun pytest to enable it; otherwise that test is skipped. It uses a transaction and rolls back its temporary rows.
+From `backend/` on Windows:
 
 ```powershell
-$env:TEST_DATABASE_URL = "mysql+pymysql://USER:URL_ENCODED_PASSWORD@127.0.0.1:3306/TEST_DATABASE?charset=utf8mb4"
-.venv\Scripts\python -m pytest -q
+.\.venv\Scripts\python -m pytest -q
+.\.venv\Scripts\python -m ruff check .
+.\.venv\Scripts\python -m ruff format --check .
 ```
 
-Frontend tests cover debouncing, cancellation, ignored stale responses, retry, pagination failure, duplicate pagination prevention, and search controls. `VALIDATION.md` records checks actually performed on the delivered project.
+On macOS/Linux, replace `.\.venv\Scripts\python` with `.venv/bin/python`.
 
-Manual review: search Rahul; click Engineering; load the next page; search a nonexistent name; clear the search; stop MySQL and try a new search; restart MySQL and retry. Check the layout at desktop and mobile widths and use Tab to navigate controls. `/` focuses search when you are not already typing in an input.
+The regular backend tests use isolated SQLite databases. The MySQL integration test is skipped unless `TEST_DATABASE_URL` points to a separate MySQL test database whose schema has already been migrated. It rolls back its temporary rows. Passing the SQLite tests alone does not verify MySQL collation or query plans.
 
-## Troubleshooting and submission
+For a manual check, search `Rahul`, select Engineering without changing the text, search an email prefix, load another page of Engineering employees, and change teams. Also check no matches, clearing text while a team remains selected, and deselecting the team. Stop MySQL and try a new search to check the error message; start it again and retry.
 
-- **Database port occupied:** change `MYSQL_PORT` in root `.env` and `DB_PORT` in `backend/.env` to the same free port.
-- **Access denied after changing Docker passwords:** MySQL initializes users only when the data volume is first created. Update credentials in the existing database rather than only editing `.env`.
-- **Missing environment configuration:** run `configure.py` before starting the backend. For manual setup, copy the relevant `.env.example` files. Environment files are ignored by Git.
-- **Frontend cannot reach API:** check the backend is running, `VITE_API_BASE_URL` is correct, and the browser origin is in `CORS_ORIGINS`.
-- **Stop database:** run `docker compose stop`. This preserves employee data. `docker compose down` removes containers but preserves the named data volume.
+## Troubleshooting
 
-For submission, push `frontend/`, `backend/`, `compose.yaml`, `configure.py`, the README, validation notes, and lockfiles to your GitHub repository. Exclude `.env`, virtual environments, `node_modules`, build output, and test caches. `npm ci` reproduces the frontend dependency tree; backend direct dependencies are version-pinned in the requirements files.
+- If port 3306 is occupied, change `MYSQL_PORT` in the root `.env` and `DB_PORT` in `backend/.env` to the same free port.
+- If port 5173 is occupied, free it or update the frontend port and backend CORS configuration together.
+- If the frontend cannot reach the API, check `VITE_API_BASE_URL`, the backend process, and `CORS_ORIGINS`.
+- If Docker reports access denied after changing passwords, remember that MySQL initializes users when its data volume is first created. Editing `.env` does not update an existing MySQL user's password.
+- `docker compose stop` stops MySQL while keeping its data. Run `docker compose up -d --wait` to start it again.
 
-This is the requested internal search tool. Authentication, employee creation, profile editing, and production deployment are outside the assignment scope. Before exposing a real employee directory publicly, add access control and deploy with appropriate transport and network configuration.
+The application covers employee search and viewing. Login, employee creation/editing, and production hosting are outside its current scope.
