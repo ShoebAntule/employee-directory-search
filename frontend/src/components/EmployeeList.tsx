@@ -1,9 +1,16 @@
-import { EmployeeCard } from "./EmployeeCard";
 import type { Employee } from "../types/employee";
+import { EmployeeCard } from "./EmployeeCard";
 
 export function EmployeeList({ employees }: { employees: Employee[] }) {
   return (
-    <div className="employee-grid">
+    <div className="employee-list">
+      <div className="list-head" aria-hidden="true">
+        <span>EMPLOYEE</span>
+        <span>ROLE / EMPLOYEE ID</span>
+        <span>DEPARTMENT</span>
+        <span>DATE JOINED</span>
+        <span />
+      </div>
       {employees.map((employee) => (
         <EmployeeCard key={employee.id} employee={employee} />
       ))}
@@ -13,14 +20,19 @@ export function EmployeeList({ employees }: { employees: Employee[] }) {
 
 export function EmployeeSkeletons() {
   return (
-    <div className="employee-grid" aria-hidden="true">
+    <div className="employee-list skeleton-list" aria-hidden="true">
       {Array.from({ length: 6 }, (_, index) => (
-        <div className="employee-card skeleton-card" key={index}>
-          <div className="skeleton skeleton-avatar" />
-          <div className="skeleton skeleton-title" />
-          <div className="skeleton skeleton-line" />
-          <div className="skeleton skeleton-line short" />
-          <div className="skeleton skeleton-footer" />
+        <div className="skeleton-row" key={index}>
+          <div className="skeleton-person">
+            <div className="skeleton skeleton-avatar" />
+            <div>
+              <div className="skeleton skeleton-name" />
+              <div className="skeleton skeleton-email" />
+            </div>
+          </div>
+          <div className="skeleton skeleton-role" />
+          <div className="skeleton skeleton-team" />
+          <div className="skeleton skeleton-date" />
         </div>
       ))}
     </div>

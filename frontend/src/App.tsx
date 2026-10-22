@@ -1,12 +1,19 @@
 import {
   AlertCircle,
   ArrowDown,
-  ArrowUpRight,
+  ArrowRight,
   Building2,
-  Check,
-  ChevronRight,
+  Code2,
+  Headphones,
+  HeartHandshake,
+  Landmark,
+  Layers3,
   LoaderCircle,
+  Megaphone,
+  Palette,
+  RotateCcw,
   UsersRound,
+  X,
 } from "lucide-react";
 import { useState } from "react";
 import { EmptyState } from "./components/EmptyState";
@@ -15,202 +22,260 @@ import { SearchBar } from "./components/SearchBar";
 import { useEmployeeSearch } from "./hooks/useEmployeeSearch";
 
 const departments = [
-  "Engineering",
-  "Design",
-  "Product",
-  "People",
-  "Marketing",
-  "Finance",
-  "Customer Success",
+  { name: "Engineering", icon: Code2 },
+  { name: "Design", icon: Palette },
+  { name: "Product", icon: Layers3 },
+  { name: "People", icon: HeartHandshake },
+  { name: "Marketing", icon: Megaphone },
+  { name: "Finance", icon: Landmark },
+  { name: "Customer Success", icon: Headphones },
 ];
 
 export default function App() {
   const [search, setSearch] = useState("");
-  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
+  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(
+    null,
+  );
   const directory = useEmployeeSearch(search, selectedDepartment);
-  const busy = directory.status === "loading" || directory.status === "waiting";
   const query = search.trim();
+  const busy = directory.status === "waiting" || directory.status === "loading";
+  const hasFilters = Boolean(query || selectedDepartment);
+
+  function clearFilters() {
+    setSearch("");
+    setSelectedDepartment(null);
+  }
 
   return (
-    <div className="app-shell">
+    <div className="workspace-shell">
       <a className="skip-link" href="#directory">
         Skip to directory
       </a>
-      <header className="site-header">
-        <div className="header-inner">
-          <a className="brand" href="/" aria-label="People directory home">
-            <span className="brand-mark">
-              <UsersRound size={23} strokeWidth={1.8} />
-            </span>
-            <span>
-              people<span className="brand-period">.</span>
-            </span>
-          </a>
-          <span className="header-divider" />
-          <span className="active-nav">
-            <UsersRound size={16} aria-hidden="true" />
-            Employee directory
+      <aside className="sidebar" aria-label="Directory filters">
+        <a className="brand" href="/" aria-label="Roster directory home">
+          <span className="brand-symbol">
+            <UsersRound size={24} strokeWidth={1.7} />
           </span>
-          <div className="workspace">
-            <Building2 size={16} aria-hidden="true" />
-            <span>Our workspace</span>
-            <span className="workspace-dot" />
+          <span>
+            roster<span className="brand-dot">/</span>
+            <small>THE PEOPLE WORKSPACE</small>
+          </span>
+        </a>
+        <div className="workspace-label">
+          <span className="workspace-square">
+            <Building2 size={17} />
+          </span>
+          <span>
+            Employee workspace<small>Internal directory</small>
+          </span>
+        </div>
+        <div className="sidebar-label">
+          <span>DEPARTMENTS</span>
+          <span>{departments.length}</span>
+        </div>
+        <div className="team-filters">
+          <button
+            className={`team-button ${selectedDepartment === null ? "is-active" : ""}`}
+            aria-pressed={selectedDepartment === null}
+            onClick={() => setSelectedDepartment(null)}
+          >
+            <UsersRound size={18} aria-hidden="true" />
+            <span>All departments</span>
+            <span className="selection-marker" />
+          </button>
+          {departments.map(({ name, icon: Icon }) => (
+            <button
+              key={name}
+              className={`team-button ${selectedDepartment === name ? "is-active" : ""}`}
+              aria-pressed={selectedDepartment === name}
+              onClick={() =>
+                setSelectedDepartment((current) =>
+                  current === name ? null : name,
+                )
+              }
+            >
+              <Icon size={18} aria-hidden="true" />
+              <span>{name}</span>
+              <span className="selection-marker" />
+            </button>
+          ))}
+        </div>
+        <div className="sidebar-note">
+          <div className="note-rule" />
+          <span>
+            LESS SEARCHING.
+            <br />
+            MORE CONNECTING.
+          </span>
+          <p>
+            The people behind
+            <br />
+            the work, in one place.
+          </p>
+          <div className="keyboard-tip">
+            <kbd>/</kbd>
+            <span>Jump to search</span>
           </div>
         </div>
-      </header>
-      <main>
-        <section className="hero">
-          <div className="hero-copy">
-            <span className="eyebrow">
-              <span />
-              BETTER TOGETHER
-            </span>
-            <h1>Find your people.</h1>
-            <p>
-              Good work starts with a connection.
-              <br className="mobile-break" /> Get to know the people who make it
-              happen.
-            </p>
+        <div className="sidebar-footer">
+          <span className="footer-symbol">r/</span>
+          <span>A space for your team.</span>
+        </div>
+      </aside>
+      <div className="main-shell">
+        <header className="topbar">
+          <div className="breadcrumbs">
+            <span>Workspace</span>
+            <span className="breadcrumb-slash">/</span>
+            <strong>Directory</strong>
           </div>
-          <div className="hero-art" aria-hidden="true">
-            <span className="orbit orbit-one" />
-            <span className="orbit orbit-two" />
-            <span className="art-line" />
-            <span className="art-avatar art-one">RS</span>
-            <span className="art-avatar art-two">AK</span>
-            <span className="art-avatar art-three">PN</span>
-            <span className="art-dot" />
-            <span className="together-label">
-              <span />A little more connected.
-            </span>
-          </div>
-        </section>
-        <section
-          id="directory"
-          className="directory-section"
-          aria-labelledby="directory-title"
-        >
-          <div className="section-heading">
-            <div className="breadcrumb">
-              WORKSPACE
-              <ChevronRight size={12} aria-hidden="true" />
-              PEOPLE
-            </div>
-            <span className="internal-label">
-              <span />
-              INTERNAL DIRECTORY
-            </span>
-          </div>
-          <div className="title-row">
+          <span className="topbar-label">PEOPLE & CONNECTIONS</span>
+        </header>
+        <main id="directory" className="directory-main">
+          <section className="page-intro" aria-labelledby="page-title">
             <div>
-              <h2 id="directory-title">Employee directory</h2>
-              <p>A place for every name. A team behind every role.</p>
+              <div className="eyebrow">
+                <span />
+                THE TEAM, AT A GLANCE
+              </div>
+              <h1 id="page-title">
+                Employee directory<span>.</span>
+              </h1>
+              <p>Find a teammate. See their role. Get in touch.</p>
             </div>
-            <span className="directory-icon" aria-hidden="true">
-              <UsersRound size={25} strokeWidth={1.4} />
-            </span>
-          </div>
-          <SearchBar value={search} onChange={setSearch} />
-          <div className="search-details">
-            <p id="search-help">
-              Search the beginning of a name, email or department.
-            </p>
-            <span>
-              <Check size={13} aria-hidden="true" />
-              Updated as you type
-            </span>
-          </div>
-          <div className="department-row">
-            <span className="department-label">EXPLORE TEAMS</span>
-            <div className="department-chips">
-              {departments.map((department) => (
+            <button
+              className="reset-button"
+              onClick={clearFilters}
+              disabled={!hasFilters}
+            >
+              <RotateCcw size={16} aria-hidden="true" />
+              Clear filters
+            </button>
+          </section>
+          <section className="search-panel" aria-label="Employee search">
+            <div className="search-panel-top">
+              <span className="field-label">WHO ARE YOU LOOKING FOR?</span>
+              <span className="search-shortcut">
+                Press <kbd>/</kbd> to focus
+              </span>
+            </div>
+            <SearchBar value={search} onChange={setSearch} />
+            <div className="search-panel-bottom">
+              <p id="search-help">
+                Search the beginning of a name, email, or department.
+              </p>
+              {selectedDepartment ? (
                 <button
-                  key={department}
-                  className={`chip ${selectedDepartment === department ? "selected" : ""}`}
-                  aria-pressed={selectedDepartment === department}
-                  onClick={() =>
-                    setSelectedDepartment((current) =>
-                      current === department ? null : department
-                    )
-                  }
+                  className="active-filter"
+                  onClick={() => setSelectedDepartment(null)}
+                  aria-label="Remove department filter"
                 >
-                  {department}
-                  <ArrowUpRight size={12} aria-hidden="true" />
+                  <span>Within {selectedDepartment}</span>
+                  <X size={13} aria-hidden="true" />
                 </button>
-              ))}
-            </div>
-          </div>
-          <div className="results-heading">
-              <h3>
-              {query || selectedDepartment ? "Search results" : "Your next connection"}
-            </h3>
-            <span role="status" aria-live="polite">
-              {busy ? (
-                <>
-                  <LoaderCircle className="spin" size={13} aria-hidden="true" />
-                  {directory.status === "waiting"
-                    ? "Waiting for you to finish typing…"
-                    : "Finding your people…"}
-                </>
-              ) : directory.status === "success" ? (
-                `${directory.items.length}${directory.has_more ? "+" : ""} ${directory.items.length === 1 ? "person" : "people"} found`
               ) : (
-                "MADE FOR HUMAN CONNECTION"
+                <span className="search-scope">
+                  <Building2 size={13} aria-hidden="true" />
+                  Across all departments
+                </span>
               )}
-            </span>
-          </div>
-          <div className="results-content" aria-busy={busy}>
-            {busy && <EmployeeSkeletons />}
-            {directory.status === "idle" && <EmptyState />}
-            {directory.status === "error" && (
-              <div className="error-state" role="alert">
-                <AlertCircle size={28} />
-                <h3>We couldn’t load the directory.</h3>
-                <p>{directory.error}</p>
-                <button className="primary-button" onClick={directory.retry}>
-                  Try again
+            </div>
+          </section>
+          <section className="results-panel" aria-labelledby="results-title">
+            <div className="results-toolbar">
+              <div className="results-title-group">
+                <span className="results-symbol">
+                  <UsersRound size={18} aria-hidden="true" />
+                </span>
+                <h2 id="results-title">
+                  {hasFilters ? "Matching people" : "People directory"}
+                </h2>
+                {directory.status === "success" && (
+                  <span className="result-count">
+                    {directory.items.length}
+                    {directory.has_more ? "+" : ""}
+                  </span>
+                )}
+              </div>
+              <div className="result-status" role="status" aria-live="polite">
+                {busy ? (
+                  <>
+                    <LoaderCircle
+                      size={14}
+                      className="spin"
+                      aria-hidden="true"
+                    />
+                    {directory.status === "waiting"
+                      ? "Waiting for typing to pause"
+                      : "Searching directory"}
+                  </>
+                ) : directory.status === "success" ? (
+                  `${directory.items.length} ${directory.items.length === 1 ? "person" : "people"} loaded`
+                ) : (
+                  "YOUR NEXT CONNECTION STARTS HERE"
+                )}
+              </div>
+            </div>
+            <div className="results-body" aria-busy={busy}>
+              {busy && <EmployeeSkeletons />}
+              {directory.status === "idle" && <EmptyState />}
+              {directory.status === "error" && (
+                <div className="error-state" role="alert">
+                  <span className="error-icon">
+                    <AlertCircle size={28} />
+                  </span>
+                  <h3>The directory is taking a break.</h3>
+                  <p>{directory.error}</p>
+                  <button className="primary-button" onClick={directory.retry}>
+                    Try again
+                    <ArrowRight size={15} />
+                  </button>
+                </div>
+              )}
+              {directory.status === "success" &&
+                (directory.items.length ? (
+                  <EmployeeList employees={directory.items} />
+                ) : (
+                  <EmptyState
+                    query={query || selectedDepartment || undefined}
+                  />
+                ))}
+            </div>
+            {directory.pageError && (
+              <p className="page-error" role="alert">
+                {directory.pageError}
+              </p>
+            )}
+            {directory.status === "success" && directory.has_more && (
+              <div className="pagination-footer">
+                <span>There are more people to discover.</span>
+                <button
+                  className="primary-button"
+                  disabled={directory.loadingMore}
+                  onClick={directory.loadMore}
+                >
+                  {directory.loadingMore ? (
+                    <LoaderCircle size={15} className="spin" />
+                  ) : (
+                    <ArrowDown size={15} />
+                  )}
+                  {directory.loadingMore
+                    ? "Loading people…"
+                    : directory.pageError
+                      ? "Try loading more again"
+                      : "Load more people"}
                 </button>
               </div>
             )}
-            {directory.status === "success" &&
-              (directory.items.length ? (
-                <EmployeeList employees={directory.items} />
-              ) : (
-                <EmptyState query={query || selectedDepartment || undefined} />
-              ))}
-          </div>
-          {directory.pageError && (
-            <p className="page-error" role="alert">
-              {directory.pageError}
-            </p>
-          )}
-          {directory.status === "success" && directory.has_more && (
-            <div className="load-more">
-              <button
-                className="primary-button"
-                disabled={directory.loadingMore}
-                onClick={directory.loadMore}
-              >
-                {directory.loadingMore ? (
-                  <LoaderCircle size={16} className="spin" />
-                ) : (
-                  <ArrowDown size={16} />
-                )}
-                {directory.loadingMore
-                  ? "Loading people…"
-                  : directory.pageError
-                    ? "Try loading more again"
-                    : "Load more people"}
-              </button>
-            </div>
-          )}
-        </section>
-      </main>
-      <footer className="site-footer">
-        <span className="footer-brand">people.</span>
-        <span>Different talents. One team.</span>
-        <span className="footer-note">A little closer, every day.</span>
-      </footer>
+          </section>
+          <footer className="main-footer">
+            <span>Different roles. Shared purpose.</span>
+            <span>
+              roster<span className="brand-dot">/</span>
+            </span>
+          </footer>
+        </main>
+      </div>
     </div>
   );
 }

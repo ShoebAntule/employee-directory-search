@@ -8,6 +8,7 @@ interface Props {
 
 export function SearchBar({ value, onChange }: Props) {
   const input = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     function handleKey(event: KeyboardEvent) {
       const target = event.target as HTMLElement | null;
@@ -28,7 +29,7 @@ export function SearchBar({ value, onChange }: Props) {
 
   return (
     <div className="search-box">
-      <Search size={23} aria-hidden="true" />
+      <Search size={22} aria-hidden="true" />
       <label className="sr-only" htmlFor="employee-search">
         Search employees by name, email or department
       </label>
@@ -40,23 +41,22 @@ export function SearchBar({ value, onChange }: Props) {
         value={value}
         maxLength={150}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Search by name, email or department…"
+        placeholder="Try a name, email, or department"
         aria-describedby="search-help"
         autoComplete="off"
       />
-      {value ? (
+      {value && (
         <button
-          className="icon-button"
+          type="button"
+          className="clear-search"
           aria-label="Clear search"
           onClick={() => {
             onChange("");
             input.current?.focus();
           }}
         >
-          <X size={19} />
+          <X size={18} aria-hidden="true" />
         </button>
-      ) : (
-        <kbd aria-hidden="true">/</kbd>
       )}
     </div>
   );

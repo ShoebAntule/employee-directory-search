@@ -1,40 +1,43 @@
-import { Search, UsersRound } from "lucide-react";
+import { ArrowRight, Search, UsersRound } from "lucide-react";
 
 export function EmptyState({ query }: { query?: string }) {
   return (
     <div className="empty-state">
-      <div className="empty-illustration" aria-hidden="true">
-        <span className="empty-ring" />
-        <span className="empty-avatar left">AK</span>
-        <span className="empty-avatar right">RS</span>
-        <span className="empty-center">
-          {query ? (
-            <Search size={32} strokeWidth={1.5} />
-          ) : (
-            <UsersRound size={35} strokeWidth={1.4} />
-          )}
-        </span>
+      <div className="empty-symbol" aria-hidden="true">
+        {query ? (
+          <Search size={31} strokeWidth={1.6} />
+        ) : (
+          <UsersRound size={31} strokeWidth={1.6} />
+        )}
       </div>
+      <span className="empty-eyebrow">
+        {query ? "LET’S TRY THAT AGAIN" : "A DIRECTORY BUILT AROUND PEOPLE"}
+      </span>
       <h3>
         {query
-          ? "No people found. Keep looking."
+          ? "No matches for this search."
           : "The right person is a search away."}
       </h3>
       <p>
         {query ? (
           <>
-            We couldn’t find a name or department starting with{" "}
-            <strong>“{query}”</strong>. Try a shorter name or a different
-            department.
+            Nothing matched <strong>“{query}”</strong> with the current filters.
+            Try a shorter search or clear the selected department.
           </>
         ) : (
-          "Find a familiar face, discover a teammate, or put a name to the people behind the work."
+          "Search by name, email, or department. You can also choose a team to explore the people behind it."
         )}
       </p>
       {!query && (
-        <span className="empty-note">
-          Start with a name, or choose a department above.
-        </span>
+        <div className="example-search" aria-hidden="true">
+          <span>rah</span>
+          <ArrowRight size={14} />
+          <strong>Rahul</strong>
+          <span className="example-divider" />
+          <span>eng</span>
+          <ArrowRight size={14} />
+          <strong>Engineering</strong>
+        </div>
       )}
     </div>
   );
